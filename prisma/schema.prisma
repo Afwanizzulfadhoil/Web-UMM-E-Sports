@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  user
+  admin
+}
+
+model User {
+  id          Int      @id @default(autoincrement())
+  name        String?
+  email       String   @unique
+  password    String?
+  image       String?
+  role        Role     @default(user)
+  google_id   String?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  tournaments Tournament[]
+  events      Event[]
+  logs        ActivityLog[]
+
+  @@map("users")
+}
+
+model Arena {
+  id          Int      @id @default(autoincrement())
+  name        String
+  location    String?
+  capacity    Int?
+  description String?  @db.Text
+  image_url   String?
+  status      String   @default("active")
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  tournaments Tournament[]
+
+  @@map("arenas")
+}
+
+model Tournament {
+  id          Int      @id @default(autoincrement())
+  name        String
+  game        String?
+  start_date  DateTime?
+  end_date    DateTime?
+  prize_pool  Decimal? @db.Decimal(10, 2)
+  max_teams   Int?
+  status      String?
+  description String?  @db.Text
+  image_url   String?
+  arena_id    Int?
+  arena       Arena?   @relation(fields: [arena_id], references: [id])
+  created_by  Int?
+  creator     User?    @relation(fields: [created_by], references: [id])
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  @@map("tournaments")
+}
+
+model Event {
+  id          Int      @id @default(autoincrement())
+  name        String
+  date        DateTime?
+  time        String?
+  location    String?
+  description String?  @db.Text
+  image_url   String?
+  status      String?
+  category    String?
+  created_by  Int?
+  creator     User?    @relation(fields: [created_by], references: [id])
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  @@map("events")
+}
+
+model ActivityLog {
+  id          Int      @id @default(autoincrement())
+  user_id     Int?
+  user        User?    @relation(fields: [user_id], references: [id])
+  action      String
+  table_name  String?
+  created_at  DateTime @default(now())
+
+  @@map("activity_logs")
+}
